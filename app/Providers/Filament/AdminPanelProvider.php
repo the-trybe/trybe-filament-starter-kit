@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -51,8 +52,11 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->plugins([
+                FilamentShieldPlugin::make(),
+            ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])->readOnlyRelationManagersOnResourceViewPagesByDefault(false);
     }
 }
