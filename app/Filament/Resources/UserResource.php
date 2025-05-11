@@ -10,6 +10,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
@@ -65,6 +66,16 @@ class UserResource extends Resource
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
+                Tables\Actions\Action::make('ActivityLog')
+                    ->label(__('Activity Log'))
+                    ->color('info')
+                    ->icon('heroicon-c-calendar-days')
+                    ->modal()
+                    ->modalContent(fn (Model $record) => view('filament.activity-log', ['record' => $record]))
+                    ->modalWidth('5xl')
+                    ->modalCancelAction(false)
+                    ->modalSubmitAction(false)
+                    ->slideOver(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
