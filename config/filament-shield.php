@@ -56,7 +56,12 @@ return [
         'pages' => true,
         'widgets' => true,
         'resources' => true,
-        'custom_permissions' => false,
+        'custom_permissions' => true,
+    ],
+
+    'custom_permissions' => [
+        'delete-backup',
+        'download-backup',
     ],
 
     'generator' => [
