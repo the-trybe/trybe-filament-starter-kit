@@ -1,0 +1,63 @@
+name: Deploy to Forge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Laravel Forge
+        uses: the-trybe/forge-deployment-scripts@v1
+        with:
+          forge_api_token: ${{ secrets.FORGE_API_TOKEN }}
+          deployment_file: forge-deploy.yml
+          secrets: |
+            MAIN_APP_KEY=${{ secrets.MAIN_APP_KEY }}
+            DB_USERNAME=${{ secrets.DB_USERNAME }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+  notify-success:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+      - name: Notify Discord on success
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "$(jq -n --arg content "✅ **Deployment Succeeded!**" \
+                       --arg repo "**Repository**: $GITHUB_REPOSITORY" \
+                      --arg branch "**Branch**: $GITHUB_REF_NAME" \
+                       --arg url "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+                       '{"content": "\($content)\n\($repo)\n\($branch)\n<\($url)>"}')" \
+               $DISCORD_WEBHOOK_URL
+
+  notify-failure:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Notify Discord on failure
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          curl -H "Content-Type: application/json" \
+               -d "$(jq -n --arg content "🚨 **Deployment Failed!**" \
+                       --arg repo "**Repository**: $GITHUB_REPOSITORY" \
+                       --arg url "https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+                      --arg branch "**Branch**: $GITHUB_REF_NAME" \
+                       '{"content": "\($content)\n\($repo)\n\($branch)\n<\($url)>"}')" \
+               $DISCORD_WEBHOOK_URL
